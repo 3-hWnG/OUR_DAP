@@ -1,5 +1,6 @@
 from roboflow import Roboflow
 import os
+drive.mount('/content/drive')
 
 # 1. Khởi tạo Roboflow
 # Lưu ý: Nên bảo mật API Key, không nên share công khai
