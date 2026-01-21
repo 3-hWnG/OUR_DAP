@@ -1,6 +1,6 @@
 ## 🚀 Mở rộng Ứng dụng (Future Scope)
 
-IDEA VỀ VIỆC FPT SẼ CÓ 1 HỆ THỐNG THU TIỀN GIỮ XE TỰ ĐỘNG THÔNG QUA BIẾN SỐ XE CỦA SINH VIÊN ( MỖI SINH VIÊN SẼ ĐỊNH DANH BIỂN SỐ XE TRÊN FAP ) 
+Ý TƯỞNG CÓ HI VỌNG NHẤT: FPT SẼ CÓ 1 HỆ THỐNG THU TIỀN GIỮ XE TỰ ĐỘNG THÔNG QUA BIẾN SỐ XE CỦA SINH VIÊN ( MỖI SINH VIÊN SẼ ĐỊNH DANH BIỂN SỐ XE TRÊN FAP ) 
 
 Từ nền tảng nhận diện biển số (LPR Foundation), hệ thống có thể mở rộng để giải quyết các bài toán thực tế sau:
 
