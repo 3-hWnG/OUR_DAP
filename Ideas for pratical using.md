@@ -2,8 +2,10 @@
 
 Ý TƯỞNG CÓ HI VỌNG NHẤT: FPT SẼ CÓ 1 HỆ THỐNG THU TIỀN GIỮ XE TỰ ĐỘNG THÔNG QUA BIẾN SỐ XE CỦA SINH VIÊN ( MỖI SINH VIÊN SẼ ĐỊNH DANH BIỂN SỐ XE TRÊN FAP ) 
 
-Từ nền tảng nhận diện biển số (LPR Foundation), hệ thống có thể mở rộng để giải quyết các bài toán thực tế sau:
 
+
+# KHAM KHẢO
+Từ nền tảng nhận diện biển số (LPR Foundation), hệ thống có thể mở rộng để giải quyết các bài toán thực tế sau:
 ### 1. Định danh và Cá nhân hóa (Identification & Personalization) 🆔
 Biển số xe đóng vai trò như "ID Card" định danh duy nhất cho phương tiện, cho phép hệ thống truy xuất Database để thực hiện các tác vụ:
 
