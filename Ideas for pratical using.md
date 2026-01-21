@@ -1,6 +1,6 @@
 ## 🚀 Mở rộng Ứng dụng (Future Scope)
 
-Ý TƯỞNG CÓ HI VỌNG NHẤT: FPT SẼ CÓ 1 HỆ THỐNG THU TIỀN GIỮ XE TỰ ĐỘNG THÔNG QUA BIẾN SỐ XE CỦA SINH VIÊN ( MỖI SINH VIÊN SẼ ĐỊNH DANH BIỂN SỐ XE TRÊN FAP ) 
+## Ý TƯỞNG CÓ HI VỌNG NHẤT: FPT SẼ CÓ 1 HỆ THỐNG THU TIỀN GIỮ XE TỰ ĐỘNG THÔNG QUA BIẾN SỐ XE CỦA SINH VIÊN ( MỖI SINH VIÊN SẼ ĐỊNH DANH BIỂN SỐ XE TRÊN FAP ) 
 
 
 
