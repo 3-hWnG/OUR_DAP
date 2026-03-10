@@ -1,12 +1,16 @@
 # Đường dẫn tuyệt đối đến thư mục chứa dataset đã chia của bạn
-path: D:/Study_FPTU/DAP391m/plate detection/dataset_split 
+path: D:/Study_FPTU/DAP391m/plate detection/dataset_split  #tự custom lại
 
 # Nơi chứa ảnh train và val (YOLO sẽ tự động tìm folder labels tương ứng)
 train: train/images
 val: val/images
 
 # Số lượng class (nhãn)
-nc: 1
+nc: 3
 
 # Tên của class. Bạn nhớ sửa lại cho đúng với tên bạn quy định nhé.
-names: ['license_plate']
+names:
+  0: car_long_plate
+  1: car_square_plate
+  2: bike_plate
+
