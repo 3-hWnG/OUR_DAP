@@ -25,6 +25,7 @@ from export2 import VideoExporter
 DEFAULT_REALTIME_WEIGHTS = ''
 DEFAULT_EXPORT_WEIGHTS   = ''
 
+
 # ========================================================
 # 🖥️  CỬA SỔ CÀI ĐẶT MODEL
 # ========================================================
@@ -33,10 +34,10 @@ class ModelSettingsWindow(tk.Toplevel):
     """Cửa sổ popup để người dùng chọn / thay đổi model weights."""
 
     def __init__(self, parent, realtime_var: tk.StringVar, export_var: tk.StringVar,
-                 on_apply):
+                 gpu_var: tk.BooleanVar, on_apply):
         super().__init__(parent)
         self.title("⚙️  Cài đặt Model")
-        self.geometry("540x240")
+        self.geometry("540x290")
         self.resizable(False, False)
         self.grab_set()   # Modal
 
@@ -49,28 +50,44 @@ class ModelSettingsWindow(tk.Toplevel):
                  font=("Arial", 9, "bold")).grid(row=0, column=0, columnspan=3,
                                                   sticky="w", **pad)
 
-        self._rt_entry = tk.Entry(self, textvariable=realtime_var, width=48)
-        self._rt_entry.grid(row=1, column=0, columnspan=2, sticky="ew", padx=12)
+        tk.Entry(self, textvariable=realtime_var, width=48).grid(
+            row=1, column=0, columnspan=2, sticky="ew", padx=12)
 
         tk.Button(self, text="📂 Browse",
-                  command=lambda: self._browse(realtime_var)).grid(row=1, column=2,
-                                                                    padx=(4, 12))
+                  command=lambda: self._browse(realtime_var)).grid(
+            row=1, column=2, padx=(4, 12))
 
         # ── Export model ────────────────────────────────────────────
         tk.Label(self, text="Model Export (Xuất video + CSV)",
                  font=("Arial", 9, "bold")).grid(row=2, column=0, columnspan=3,
                                                   sticky="w", **pad)
 
-        self._ex_entry = tk.Entry(self, textvariable=export_var, width=48)
-        self._ex_entry.grid(row=3, column=0, columnspan=2, sticky="ew", padx=12)
+        tk.Entry(self, textvariable=export_var, width=48).grid(
+            row=3, column=0, columnspan=2, sticky="ew", padx=12)
 
         tk.Button(self, text="📂 Browse",
-                  command=lambda: self._browse(export_var)).grid(row=3, column=2,
-                                                                  padx=(4, 12))
+                  command=lambda: self._browse(export_var)).grid(
+            row=3, column=2, padx=(4, 12))
+
+        # ── GPU option ───────────────────────────────────────────────
+        gpu_available = torch.cuda.is_available()
+        if gpu_available:
+            gpu_text  = "🟢  Sử dụng GPU (CUDA)"
+            gpu_color = "#1a7a1a"
+            gpu_state = "normal"
+        else:
+            gpu_text  = "🔴  Sử dụng GPU (CUDA)  — Không tìm thấy GPU trên máy này"
+            gpu_color = "#cc0000"
+            gpu_state = "disabled"
+            gpu_var.set(False)   # Tự động tắt nếu không có GPU
+
+        tk.Checkbutton(self, text=gpu_text, variable=gpu_var,
+                       fg=gpu_color, state=gpu_state).grid(
+            row=4, column=0, columnspan=3, sticky="w", padx=12, pady=8)
 
         # ── Nút ─────────────────────────────────────────────────────
         btn_frame = tk.Frame(self)
-        btn_frame.grid(row=4, column=0, columnspan=3, pady=10)
+        btn_frame.grid(row=5, column=0, columnspan=3, pady=10)
 
         tk.Button(btn_frame, text="✅  Áp dụng & Tải lại Model",
                   command=self._apply, width=26, height=2,
@@ -99,56 +116,37 @@ class ModelSettingsWindow(tk.Toplevel):
 # ========================================================
 
 class ExportProgressPanel(tk.Frame):
-    """
-    Panel nhỏ hiển thị tiến độ export gồm:
-      - Label stage hiện tại
-      - ProgressBar tổng thể (4 giai đoạn)
-      - ProgressBar giai đoạn hiện tại
-      - Label log dòng cuối
-    """
-
-    STAGE_WEIGHT = [15, 10, 70, 5]   # Tỉ trọng % của từng stage (tổng = 100)
+    STAGE_WEIGHT = [15, 10, 70, 5]
 
     def __init__(self, parent, **kwargs):
         super().__init__(parent, relief="groove", bd=2, **kwargs)
 
         tk.Label(self, text="TIẾN ĐỘ XUẤT VIDEO", font=("Arial", 9, "bold")).pack(pady=(8, 2))
 
-        # Tổng thể
         tk.Label(self, text="Tổng thể:", anchor="w").pack(fill="x", padx=10)
         self._total_bar = ttk.Progressbar(self, length=340, mode="determinate", maximum=100)
         self._total_bar.pack(padx=10, pady=(0, 4))
 
-        # Giai đoạn hiện tại
         self._stage_label = tk.Label(self, text="Chờ bắt đầu...", anchor="w",
                                      font=("Arial", 8), fg="#555")
         self._stage_label.pack(fill="x", padx=10)
         self._stage_bar = ttk.Progressbar(self, length=340, mode="determinate", maximum=100)
         self._stage_bar.pack(padx=10, pady=(0, 4))
 
-        # Log text
         self._log_label = tk.Label(self, text="", anchor="w", wraplength=330,
                                    font=("Arial", 8), fg="#333")
         self._log_label.pack(fill="x", padx=10, pady=(0, 8))
 
     def update_progress(self, stage: int, pct: float, label: str):
-        """
-        Được gọi từ thread worker qua widget.after() để an toàn với Tkinter.
-        stage = 0 (init), 1–4 (pipeline stages)
-        """
-        # ── Cập nhật stage bar ──────────────────────────────────────
         self._stage_bar["value"] = pct
         self._stage_label["text"] = label
         self._log_label["text"] = label
 
-        # ── Tính tổng thể ───────────────────────────────────────────
         if stage == 0:
-            total = pct * 0.05          # Init chiếm 5% tổng
+            total = pct * 0.05
         else:
             offset = sum(self.STAGE_WEIGHT[:stage - 1])
-            total = offset + (pct / 100) * self.STAGE_WEIGHT[stage - 1]
-            # Cộng thêm 5% của init đã xong
-            total = 5 + total * 0.95
+            total = 5 + (offset + (pct / 100) * self.STAGE_WEIGHT[stage - 1]) * 0.95
 
         self._total_bar["value"] = min(total, 100)
 
@@ -167,19 +165,17 @@ class PlateSystem:
     def __init__(self, window):
         self.window = window
         self.window.title("Hệ thống Nhận diện Biển số OBB")
-        self.window.geometry("420x720")
+        self.window.geometry("420x740")
         self.window.resizable(False, False)
 
-        # --- State model paths (có thể thay đổi qua Settings) ---
+        # --- State ---
         self._realtime_weights = tk.StringVar(value=DEFAULT_REALTIME_WEIGHTS)
         self._export_weights   = tk.StringVar(value=DEFAULT_EXPORT_WEIGHTS)
+        self._use_gpu          = tk.BooleanVar(value=torch.cuda.is_available())
 
-        # --- Cache kết quả realtime ---
         self.results_cache: dict[int, str] = {}
         self.is_ocr_busy = False
 
-        # --- Khởi tạo models ---
-        self._device = "cuda" if torch.cuda.is_available() else "cpu"
         self.yolo_model: YOLO | None = None
         self.ocr_engine: PlateOCR | None = None
         self._load_models()
@@ -190,8 +186,7 @@ class PlateSystem:
 
         # ── Model info bar ───────────────────────────────────────────
         self._model_info = tk.Label(
-            window,
-            text=self._short_model_label(),
+            window, text=self._short_model_label(),
             font=("Arial", 8), fg="#555", wraplength=380, justify="center"
         )
         self._model_info.pack(pady=(0, 10))
@@ -232,17 +227,25 @@ class PlateSystem:
     # MODEL LOADING
     # ----------------------------------------------------------
 
+    def _get_device(self) -> str:
+        """Trả về device dựa trên lựa chọn GPU của người dùng."""
+        if self._use_gpu.get() and torch.cuda.is_available():
+            return "cuda"
+        return "cpu"
+
     def _load_models(self):
         """Tải / tải lại YOLO realtime và PlateOCR."""
         rt_path = self._realtime_weights.get().strip()
         if not rt_path:
             print("⚠️  Chưa chọn model realtime.")
             self.yolo_model = None
-            return 
+            return
+
+        device = self._get_device()
         try:
-            print(f"⏳ Đang tải YOLO realtime từ: {self._realtime_weights.get()}")
-            self.yolo_model = YOLO(self._realtime_weights.get()).to(self._device)
-            print(f"--- YOLO realtime chạy trên [{self._device.upper()}] ---")
+            print(f"⏳ Đang tải YOLO từ: {rt_path}  [{device.upper()}]")
+            self.yolo_model = YOLO(rt_path).to(device)
+            print(f"✅ YOLO realtime sẵn sàng trên [{device.upper()}]")
         except Exception as e:
             messagebox.showerror("Lỗi tải model YOLO", str(e))
             self.yolo_model = None
@@ -252,9 +255,9 @@ class PlateSystem:
 
     def _short_model_label(self) -> str:
         import os
-        rt = os.path.basename(self._realtime_weights.get())
-        ex = os.path.basename(self._export_weights.get())
-        dev = self._device.upper()
+        rt  = os.path.basename(self._realtime_weights.get()) or "(chưa chọn)"
+        ex  = os.path.basename(self._export_weights.get())   or "(chưa chọn)"
+        dev = self._get_device().upper()
         return f"Realtime: {rt}  |  Export: {ex}  |  Device: {dev}"
 
     # ----------------------------------------------------------
@@ -266,22 +269,21 @@ class PlateSystem:
             self.window,
             realtime_var=self._realtime_weights,
             export_var=self._export_weights,
+            gpu_var=self._use_gpu,
             on_apply=self._on_settings_applied,
         )
 
     def _on_settings_applied(self):
-        """Callback sau khi người dùng nhấn Áp dụng trong Settings."""
         self.results_cache.clear()
         self._load_models()
         self._model_info["text"] = self._short_model_label()
         messagebox.showinfo("Thành công", "✅ Đã tải lại model mới!")
 
     # ----------------------------------------------------------
-    # REALTIME (webcam / video preview)
+    # REALTIME
     # ----------------------------------------------------------
 
     def _ocr_worker(self, plate_img, track_id):
-        """Chạy OCR trên luồng riêng, lưu kết quả vào cache."""
         self.is_ocr_busy = True
         text = self.ocr_engine.get_text(plate_img)
         if text and text != "Scanning...":
@@ -289,7 +291,6 @@ class PlateSystem:
         self.is_ocr_busy = False
 
     def _start_stream(self, mode: str):
-        """Mở webcam hoặc video, chạy YOLO + OCR realtime."""
         if self.yolo_model is None:
             messagebox.showerror("Lỗi", "Model chưa được tải. Vào Cài đặt để chọn lại.")
             return
@@ -335,7 +336,7 @@ class PlateSystem:
                 frame_count += 1
 
                 if current_results[0].obb is not None and current_results[0].obb.id is not None:
-                    boxes = current_results[0].obb.xyxyxyxy.cpu().numpy()
+                    boxes    = current_results[0].obb.xyxyxyxy.cpu().numpy()
                     track_ids = current_results[0].obb.id.cpu().numpy().astype(int)
                     h_f, w_f = frame.shape[:2]
 
@@ -357,8 +358,11 @@ class PlateSystem:
                 frozen_display = frame.copy()
 
                 if mode == "video":
-                    cv2.setTrackbarPos("Frame", win_name,
-                                       int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
+                    try:
+                        cv2.setTrackbarPos("Frame", win_name,
+                                           int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
+                    except cv2.error:
+                        pass
 
             if frozen_display is not None:
                 cv2.imshow(win_name, frozen_display)
@@ -386,7 +390,6 @@ class PlateSystem:
     # ----------------------------------------------------------
 
     def _run_export(self):
-        """Chọn video → chạy VideoExporter pipeline 4 giai đoạn."""
         video_path = filedialog.askopenfilename(
             title="Chọn video để xuất",
             filetypes=[("Video files", "*.mp4 *.avi *.mov *.mkv"), ("All files", "*.*")]
@@ -394,12 +397,10 @@ class PlateSystem:
         if not video_path:
             return
 
-        # Khoá nút tránh bấm 2 lần
         self._export_btn.config(state="disabled", text="⏳ Đang xuất...")
         self._progress_panel.reset()
 
         def _on_progress(stage: int, pct: float, label: str):
-            # Callback từ worker thread → phải dùng after() để update UI an toàn
             self.window.after(0, self._progress_panel.update_progress, stage, pct, label)
 
         def _worker():
@@ -407,6 +408,7 @@ class PlateSystem:
                 exporter = VideoExporter(
                     video_input=video_path,
                     yolo_model_path=self._export_weights.get(),
+                    device=self._get_device(),
                     progress_callback=_on_progress,
                 )
                 result = exporter.run()
@@ -418,9 +420,9 @@ class PlateSystem:
                     f"📊 CSV     : {result['csv_output']}"
                 ))
             except Exception as e:
-                self.window.after(0, lambda: messagebox.showerror("Lỗi Export", str(e)))
+                err_msg = str(e)
+                self.window.after(0, lambda m=err_msg: messagebox.showerror("Lỗi Export", m))
             finally:
-                # Mở khoá nút sau khi xong
                 self.window.after(0, lambda: self._export_btn.config(
                     state="normal", text="📤  XUẤT VIDEO + CSV"
                 ))
@@ -432,7 +434,6 @@ class PlateSystem:
     # ----------------------------------------------------------
 
     def _process_static_image(self):
-        """Chọn ảnh → nhận diện biển số → hiển thị kết quả."""
         if self.yolo_model is None:
             messagebox.showerror("Lỗi", "Model chưa được tải. Vào Cài đặt để chọn lại.")
             return
