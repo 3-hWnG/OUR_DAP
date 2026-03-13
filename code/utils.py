@@ -81,18 +81,32 @@ def warp_plate(img, box_coords, expand_ratio=0.13):
 # ========================================================
 
 def draw_plate_static(img, pts, text):
-    """Vẽ label biển số lên ảnh tĩnh."""
-    h_img = img.shape[0]
-    font_scale = max(0.5, min((h_img / 1000) * 0.8, 1.0))
-    thickness = 2
-    y_max = pts[:, 1].max()
-    x_min = pts[:, 0].min()
-    pos = (x_min, y_max + int(30 * font_scale))
+    """Vẽ khung OBB + label căn giữa dưới biển số lên ảnh tĩnh (giống video)."""
+    cv2.polylines(img, [pts], True, (0, 255, 0), 3)
 
-    cv2.putText(img, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale,
-                (0, 0, 0), thickness + 2, cv2.LINE_AA)
-    cv2.putText(img, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale,
-                (0, 255, 0), thickness, cv2.LINE_AA)
+    x_min, y_min = pts[:, 0].min(), pts[:, 1].min()
+    x_max, y_max = pts[:, 0].max(), pts[:, 1].max()
+    box_w = x_max - x_min
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+
+    # Tính font_scale vừa khít chiều ngang biển số
+    (w_base, _), _ = cv2.getTextSize(text, font, 1.0, 2)
+    font_scale = (box_w - 4) / max(w_base, 1)
+    font_scale = max(0.4, min(font_scale, 2.0))
+    thickness = max(1, int(font_scale * 2))
+
+    # Lấy kích thước chữ THỰC TẾ sau khi đã clamp font_scale
+    (w_t, h_t), _ = cv2.getTextSize(text, font, font_scale, thickness)
+
+    # Nền đen: luôn dùng w_t thực tế, không dùng box_w cứng
+    bg_x1 = x_min
+    bg_x2 = x_min + w_t + 8
+    cv2.rectangle(img, (bg_x1, y_max + 5), (bg_x2, y_max + h_t + 15), (0, 0, 0), -1)
+
+    # Chữ trắng căn trái trong nền đen (padding 4px)
+    cv2.putText(img, text, (x_min + 4, y_max + h_t + 10),
+                font, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
 
 
 def draw_plate_video(img, pts, text):
