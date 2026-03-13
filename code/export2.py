@@ -33,6 +33,7 @@ class VideoExporter:
         self,
         video_input: str,
         yolo_model_path: str,
+        device: str = "cpu",
         output_dir: str | None = None,
         progress_callback: Callable[[int, float, str], None] | None = None,
     ):
@@ -41,6 +42,7 @@ class VideoExporter:
         ----------
         video_input         : Đường dẫn file video đầu vào.
         yolo_model_path     : Đường dẫn weights YOLO (.pt).
+        device              : 'cuda' hoặc 'cpu' — do main.py truyền vào.
         output_dir          : Thư mục lưu kết quả. Mặc định tự sinh từ tên video.
         progress_callback   : Hàm callback(stage, pct, label) để UI cập nhật tiến độ.
         """
@@ -60,7 +62,8 @@ class VideoExporter:
         print("=" * 60)
 
         self.progress_cb(0, 0.0, "Đang tải model YOLO...")
-        self.yolo_model = YOLO(yolo_model_path).to("cuda")
+        self.yolo_model = YOLO(yolo_model_path).to(device)
+        print(f"✅ YOLO export chạy trên [{device.upper()}]")
         self.progress_cb(0, 50.0, "Đang tải PaddleOCR...")
         self.ocr_engine = PlateOCR()
         self.progress_cb(0, 100.0, "Sẵn sàng xử lý!")
