@@ -1,16 +1,42 @@
-# Đường dẫn tuyệt đối đến thư mục chứa dataset đã chia của bạn
-path: D:/Study_FPTU/DAP391m/plate detection/dataset_split  #tự custom lại
+# ================================================================
+# DATASET CONFIG – Biển số xe Việt Nam (OBB)
+# ================================================================
 
-# Nơi chứa ảnh train và val (YOLO sẽ tự động tìm folder labels tương ứng)
+# Đường dẫn gốc của dataset (dùng / thay vì \)
+path: D:/Study_FPTU/DAP391m/plate detection/dataset_split_old
+
+# Thư mục ảnh (YOLO tự tìm labels/ cùng cấp với images/)
 train: train/images
-val: val/images
+val:   val/images
+# test: test/images   ← bỏ comment khi cần đánh giá cuối cùng
 
-# Số lượng class (nhãn)
-nc: 3
-
-# Tên của class. Bạn nhớ sửa lại cho đúng với tên bạn quy định nhé.
+# Số class và tên
+nc: 2
 names:
-  0: car_long_plate
-  1: car_square_plate
-  2: bike_plate
+  0: bike_plate
+  1: car_plate
 
+
+# ================================================================
+# AUGMENTATION – Chỉ áp dụng cho tập TRAIN, val/test giữ nguyên
+# ================================================================
+
+# ── Màu sắc & Độ sáng ──────────────────────────────────────────
+hsv_h: 0.015       # Thay đổi màu sắc nhẹ (biển số ít thay đổi màu)
+hsv_s: 0.5         # Độ bão hoà – giúp model quen cả ảnh nhạt/đậm
+hsv_v: 0.4         # Độ sáng – quan trọng cho ngày/đêm/ngược sáng
+
+# ── Hình học ────────────────────────────────────────────────────
+scale: 0.5         # Zoom 50% – giúp detect biển xa lẫn gần
+
+# ── KHÔNG lật – biển số sẽ thành gương nếu lật ─────────────────
+flipud: 0.0        # Tuyệt đối không lật dọc
+fliplr: 0.0        # Tuyệt đối không lật ngang (số sẽ bị mirror)
+
+# ── Mosaic & Mix ────────────────────────────────────────────────
+mosaic: 1.0        # Ghép 4 ảnh thành 1 – rất hiệu quả cho detect nhiều xe
+mixup: 0.05        # Trộn 2 ảnh nhẹ – tăng robustness, để thấp thôi
+copy_paste: 0.0    # Không dùng – dễ tạo biển số chồng chéo vô lý
+
+# ── Blur & Noise ────────────────────────────────────────────────
+erasing: 0.2       # Xoá ngẫu nhiên 1 vùng nhỏ – giả lập biển bị che/bẩn
