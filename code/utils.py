@@ -16,6 +16,11 @@ def format_time(frame_count, fps):
     return f"{mins:02d}:{secs:02d}"
 
 
+def clean_plate(text: str) -> str:
+    """Chuẩn hoá biển số để so sánh và lưu CSV: bỏ dấu gạch, viết hoa, strip."""
+    return text.replace("-", "").replace(" ", "").upper().strip()
+
+
 # ========================================================
 # 🎯 FILTER & CROP
 # ========================================================
@@ -82,7 +87,6 @@ def warp_plate(img, box_coords, expand_ratio=0.13):
 
 def draw_plate_static(img, pts, text):
     """Vẽ khung OBB + label căn giữa dưới biển số lên ảnh tĩnh (giống video)."""
-    # Vẽ khung OBB
     cv2.polylines(img, [pts], True, (0, 255, 0), 3)
 
     x_min, y_min = pts[:, 0].min(), pts[:, 1].min()
@@ -91,20 +95,22 @@ def draw_plate_static(img, pts, text):
 
     font = cv2.FONT_HERSHEY_SIMPLEX
 
-    # Tính font_scale để chữ vừa khít chiều ngang biển số
+    # Tính font_scale vừa khít chiều ngang biển số
     (w_base, _), _ = cv2.getTextSize(text, font, 1.0, 2)
-    font_scale = (box_w - 4) / w_base
+    font_scale = (box_w - 4) / max(w_base, 1)
     font_scale = max(0.4, min(font_scale, 2.0))
     thickness = max(1, int(font_scale * 2))
 
+    # Lấy kích thước chữ THỰC TẾ sau khi đã clamp font_scale
     (w_t, h_t), _ = cv2.getTextSize(text, font, font_scale, thickness)
 
-    # Nền đen sát dưới biển số
-    cv2.rectangle(img, (x_min, y_max + 5), (x_max, y_max + h_t + 15), (0, 0, 0), -1)
+    # Nền đen: luôn dùng w_t thực tế, không dùng box_w cứng
+    bg_x1 = x_min
+    bg_x2 = x_min + w_t + 8
+    cv2.rectangle(img, (bg_x1, y_max + 5), (bg_x2, y_max + h_t + 15), (0, 0, 0), -1)
 
-    # Chữ trắng căn giữa
-    text_x = max(x_min + 2, x_min + int((box_w - w_t) / 2))
-    cv2.putText(img, text, (text_x, y_max + h_t + 10),
+    # Chữ trắng căn trái trong nền đen (padding 4px)
+    cv2.putText(img, text, (x_min + 4, y_max + h_t + 10),
                 font, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
 
 
