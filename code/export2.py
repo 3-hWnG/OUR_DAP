@@ -219,21 +219,21 @@ class VideoExporter:
         """STAGE 4: Tổng hợp timeline và xuất CSV."""
         print(f"\n[4/4] STAGE 4: Xuất CSV → {self.csv_output}...")
         self.progress_cb(4, 0.0, "Stage 4/4: Đang xuất CSV...")
-
+ 
         track_timings = defaultdict(lambda: {"start": float('inf'), "end": 0})
         for f_idx, objects in frame_data.items():
             for obj in objects:
                 t_id = obj['id']
                 track_timings[t_id]["start"] = min(track_timings[t_id]["start"], f_idx)
                 track_timings[t_id]["end"] = max(track_timings[t_id]["end"], f_idx)
-
+ 
         with open(self.csv_output, mode='w', newline='', encoding='utf-8-sig') as f:
             writer = csv.writer(f)
             writer.writerow(["Track ID", "Biển Số (OCR)",
                              "Thời điểm xuất hiện", "Thời điểm biến mất"])
-
+ 
             for t_id, text in final_results.items():
-                text_clean = text.strip()
+                text_clean = utils.clean_plate(text)
                 if "scanning" in text_clean.lower() or text_clean == "":
                     continue
                 if t_id in track_timings:
@@ -243,7 +243,7 @@ class VideoExporter:
                         utils.format_time(track_timings[t_id]["start"], fps),
                         utils.format_time(track_timings[t_id]["end"], fps),
                     ])
-
+ 
         self.progress_cb(4, 100.0, "✅ Hoàn tất toàn bộ pipeline!")
         print("✅ STAGE 4 Hoàn tất! Đã lưu CSV.")
 
