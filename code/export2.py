@@ -74,8 +74,8 @@ class VideoExporter:
 
     def _stage1_scan(self):
         """STAGE 1: Chạy YOLO tracking, lưu crop rõ nhất mỗi track."""
-        print("\n[1/4] STAGE 1: Đang quét biển số bằng YOLO...")
-        self.progress_cb(1, 0.0, "Stage 1/4: Đang quét YOLO...")
+        print("\n[1/4] STAGE 1: Scanning plates YOLO...")
+        self.progress_cb(1, 0.0, "Stage 1/4: Scanning YOLO...")
 
         cap = cv2.VideoCapture(self.video_input)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -95,8 +95,8 @@ class VideoExporter:
 
             pct = (frame_count / max(total_frames, 1)) * 100
             self.progress_cb(1, pct,
-                             f"Stage 1/4: Quét frame {frame_count}/{total_frames}")
-            print(f"\r⏳ Quét: {frame_count}/{total_frames} ({pct:.1f}%)".ljust(60),
+                             f"Stage 1/4: Scanning frame {frame_count}/{total_frames}")
+            print(f"\r⏳ Scanning: {frame_count}/{total_frames} ({pct:.1f}%)".ljust(60),
                   end="", flush=True)
 
             results = self.yolo_model.track(
@@ -144,9 +144,9 @@ class VideoExporter:
         return frame_data, fps, frame_w, frame_h, total_frames
 
     def _stage2_ocr(self):
-        """STAGE 2: Đọc OCR trên toàn bộ ảnh crop."""
-        print("\n[2/4] STAGE 2: Đang đọc OCR các biển số...")
-        self.progress_cb(2, 0.0, "Stage 2/4: Đang đọc OCR...")
+        """STAGE 2: Using OCR to read cropped images."""
+        print("\n[2/4] STAGE 2: OCR's reading plates...")
+        self.progress_cb(2, 0.0, "Stage 2/4: OCR is reading...")
 
         final_results = {}
         crop_images = glob.glob(os.path.join(self.crop_folder, "*.jpg"))
@@ -161,18 +161,18 @@ class VideoExporter:
                 final_results[track_id] = text
                 pct = (i + 1) / max(total_crops, 1) * 100
                 self.progress_cb(2, pct,
-                                 f"Stage 2/4: Xe {track_id} → {text}")
-                print(f"\r⏳ OCR: {i+1}/{total_crops} ({pct:.1f}%) | Xe {track_id} → {text}".ljust(80),
+                                 f"Stage 2/4: Plate {track_id} → {text}")
+                print(f"\r⏳ OCR: {i+1}/{total_crops} ({pct:.1f}%) | Plate {track_id} → {text}".ljust(80),
                       end="", flush=True)
 
-        self.progress_cb(2, 100.0, f"Stage 2/4 xong — {len(final_results)} biển đọc được")
-        print("\r✅ STAGE 2 Hoàn tất!".ljust(80))
+        self.progress_cb(2, 100.0, f"Stage 2/4 Done — {len(final_results)} read successfully")
+        print("\r✅ STAGE 2 Completed!".ljust(80))
         return final_results
 
     def _stage3_render(self, frame_data, final_results, fps, frame_w, frame_h, total_frames):
-        """STAGE 3: Kết xuất video annotated."""
-        print(f"\n[3/4] STAGE 3: Đang render video → {self.video_output}...")
-        self.progress_cb(3, 0.0, "Stage 3/4: Đang render video...")
+        """STAGE 3: Export video annotated."""
+        print(f"\n[3/4] STAGE 3: Rendering video → {self.video_output}...")
+        self.progress_cb(3, 0.0, "Stage 3/4: Rendering video...")
 
         cap = cv2.VideoCapture(self.video_input)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -212,13 +212,13 @@ class VideoExporter:
 
         cap.release()
         out.release()
-        self.progress_cb(3, 100.0, "Stage 3/4 xong — Video đã render")
-        print("\r✅ STAGE 3 Hoàn tất!".ljust(60))
+        self.progress_cb(3, 100.0, "Stage 3/4 Done — Video has been rendered")
+        print("\r✅ STAGE 3 Completed!".ljust(60))
 
     def _stage4_csv(self, frame_data, final_results, fps):
-        """STAGE 4: Tổng hợp timeline và xuất CSV."""
-        print(f"\n[4/4] STAGE 4: Xuất CSV → {self.csv_output}...")
-        self.progress_cb(4, 0.0, "Stage 4/4: Đang xuất CSV...")
+        """STAGE 4: Collective timeline and exporting CSV."""
+        print(f"\n[4/4] STAGE 4: Exporting CSV → {self.csv_output}...")
+        self.progress_cb(4, 0.0, "Stage 4/4: Exporting CSV...")
  
         track_timings = defaultdict(lambda: {"start": float('inf'), "end": 0})
         for f_idx, objects in frame_data.items():
@@ -229,8 +229,8 @@ class VideoExporter:
  
         with open(self.csv_output, mode='w', newline='', encoding='utf-8-sig') as f:
             writer = csv.writer(f)
-            writer.writerow(["Track ID", "Biển Số (OCR)",
-                             "Thời điểm xuất hiện", "Thời điểm biến mất"])
+            writer.writerow(["Track ID", "Plate Number (OCR)",
+                             "Appearance Time", "Disappearance Time"])
  
             for t_id, text in final_results.items():
                 text_clean = utils.clean_plate(text)
@@ -244,8 +244,8 @@ class VideoExporter:
                         utils.format_time(track_timings[t_id]["end"], fps),
                     ])
  
-        self.progress_cb(4, 100.0, "✅ Hoàn tất toàn bộ pipeline!")
-        print("✅ STAGE 4 Hoàn tất! Đã lưu CSV.")
+        self.progress_cb(4, 100.0, "✅ Completed entire pipeline!")
+        print("✅ STAGE 4 Completed! CSV has been saved.")
 
     # ------------------------------------------------------------------
     # PUBLIC
