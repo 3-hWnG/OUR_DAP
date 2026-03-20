@@ -4,7 +4,7 @@
 ```
 rag_project/
 ├── data/
-│   └── data_sample.pdf        ← PDF tài liệu của nhóm
+│   └── DAP_Template_FINAL.pdf        ← PDF tài liệu của nhóm
 ├── pipeline/
 │   ├── __init__.py
 │   └── build_index.py         ← Build vector database
@@ -14,10 +14,10 @@ rag_project/
 │   ├── chunker.py             ← Chia text thành chunks
 │   ├── embedder.py            ← Tạo vector embedding
 │   ├── retriever.py           ← Tìm kiếm FAISS
-│   └── rag_chatbot.py         ← Gọi Gemini sinh câu trả lời
+│   └── rag_chatbot.py         ← Gọi GROQ sinh câu trả lời
+│   └── full_doc_chatbot.py    ← Đọc full doc để cho ra câu trả lời tốt hơn  
 ├── chatbot_ui.py              ← Giao diện Tkinter
-├── .env                       ← API key (tự tạo)
-├── .env.example               ← Mẫu .env
+├── .env                       ← API key
 └── requirements.txt
 ```
 
@@ -29,11 +29,11 @@ pip install -r requirements.txt
 ```
 
 ### Bước 2: Tạo file .env
-Copy `.env.example` thành `.env` rồi điền API key Gemini vào:
+Mở `.env` rồi điền API key GROQ vào:
 ```
-GEMINI_API_KEY=your_api_key_here
+GROQ_API_KEY=your_api_key_here
 ```
-Lấy API key tại: https://aistudio.google.com/app/apikey
+Lấy API key tại: [https://aistudio.google.com/app/apikey](https://console.groq.com/keys)]
 
 ### Bước 3: Đặt PDF vào thư mục data/
 Đặt tài liệu PDF của nhóm vào `data/data_sample.pdf`
