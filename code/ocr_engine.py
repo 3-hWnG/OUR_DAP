@@ -5,13 +5,13 @@ from paddleocr import PaddleOCR
 
 
 class PlateOCR:
-    def __init__(self):
+    def __init__(self, use_gpu: bool = False):
         print("Đang tải PaddleOCR (CRNN - Chuyên trị chữ méo)...")
         self.ocr = PaddleOCR(
             use_angle_cls=True,
             lang='en',
             show_log=False,
-            use_gpu=False,
+            use_gpu=use_gpu,
             rec_algorithm='CRNN',
             rec_image_shape='3, 48, 320',
             enable_mkldnn=True
