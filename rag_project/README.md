@@ -33,7 +33,7 @@ Mở `.env` rồi điền API key GROQ vào:
 ```
 GROQ_API_KEY=your_api_key_here
 ```
-Lấy API key tại: [https://aistudio.google.com/app/apikey](https://console.groq.com/keys)]
+Lấy API key tại: https://console.groq.com/keys
 
 ### Bước 3: Đặt PDF vào thư mục data/
 Đặt tài liệu PDF của nhóm vào `data/data_sample.pdf`
