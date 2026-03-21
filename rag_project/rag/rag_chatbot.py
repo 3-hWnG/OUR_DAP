@@ -18,7 +18,7 @@ def get_client():
     return _client
 
 
-def ask_rag(question: str, k: int = 8) -> str:
+def ask_rag(question: str, k: int = 5, lang: str = "vi") -> str:
     """
     Pipeline RAG:
       1. Retrieve top-k chunk liên quan
@@ -28,10 +28,12 @@ def ask_rag(question: str, k: int = 8) -> str:
     contexts = retrieve(question, k=k)
     context_text = "\n\n---\n\n".join(contexts)
 
+    lang_instruction = "Trả lời bằng tiếng Việt, rõ ràng và ngắn gọn." if lang == "vi" else "Answer in English, clearly and concisely."
+
     prompt = f"""Bạn là trợ lý AI hỗ trợ hỏi đáp về hệ thống nhận diện biển số xe.
 Hãy trả lời câu hỏi dựa trên tài liệu được cung cấp bên dưới.
 Nếu tài liệu không có thông tin liên quan, hãy nói rõ điều đó.
-Trả lời bằng tiếng Việt, rõ ràng và ngắn gọn.
+{lang_instruction}
 
 Tài liệu tham khảo:
 {context_text}
