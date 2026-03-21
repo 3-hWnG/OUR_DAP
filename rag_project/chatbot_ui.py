@@ -20,7 +20,7 @@ from rag.full_doc_chatbot import load_full_doc, ask_full_doc
 # ========================================================
 INDEX_PATH  = "vector.index"
 CHUNKS_PATH = "chunks.pkl"
-PDF_PATH    = r"data/DAP_Template_FINAL.pdf"
+PDF_PATH    = "data/DAP_Template_FINAL.pdf"
 WINDOW_TITLE = "🚗 Chatbot Nhận Diện Biển Số Xe"
 # ========================================================
 
@@ -34,6 +34,8 @@ class RAGChatbotUI:
 
         # Mode: "rag" hoặc "full_doc"
         self._mode = tk.StringVar(value="rag")
+        # Language: "vi" hoặc "en"
+        self._lang = tk.StringVar(value="vi")
 
         self._build_ui()
         self._load_all_async()
@@ -58,7 +60,7 @@ class RAGChatbotUI:
 
         # ── Toggle mode ──────────────────────────────────────────
         mode_frame = tk.Frame(self.root)
-        mode_frame.pack(pady=(0, 8))
+        mode_frame.pack(pady=(0, 4))
 
         tk.Label(mode_frame, text="Chế độ:", font=("Arial", 9, "bold")).pack(side="left", padx=(0, 6))
 
@@ -74,6 +76,26 @@ class RAGChatbotUI:
             variable=self._mode, value="full_doc",
             font=("Arial", 9), fg="#1a7a1a",
             command=self._on_mode_change
+        ).pack(side="left", padx=4)
+
+        # ── Language toggle ──────────────────────────────────────
+        lang_frame = tk.Frame(self.root)
+        lang_frame.pack(pady=(0, 8))
+
+        tk.Label(lang_frame, text="Ngôn ngữ:", font=("Arial", 9, "bold")).pack(side="left", padx=(0, 6))
+
+        tk.Radiobutton(
+            lang_frame, text="🇻🇳 Tiếng Việt",
+            variable=self._lang, value="vi",
+            font=("Arial", 9),
+            command=self._on_lang_change
+        ).pack(side="left", padx=4)
+
+        tk.Radiobutton(
+            lang_frame, text="🇬🇧 English",
+            variable=self._lang, value="en",
+            font=("Arial", 9),
+            command=self._on_lang_change
         ).pack(side="left", padx=4)
 
         # ── Khung chat ──────────────────────────────────────────
@@ -190,6 +212,13 @@ class RAGChatbotUI:
         else:
             self._append_message("📄 Đã chuyển sang chế độ Full Doc (Đọc toàn bộ PDF)\n", tag="system")
 
+    def _on_lang_change(self):
+        lang = self._lang.get()
+        if lang == "vi":
+            self._append_message("🇻🇳 Đã chuyển sang Tiếng Việt\n", tag="system")
+        else:
+            self._append_message("🇬🇧 Switched to English\n", tag="system")
+
     # ----------------------------------------------------------
     # CHAT
     # ----------------------------------------------------------
@@ -203,6 +232,7 @@ class RAGChatbotUI:
         self._set_input_state("disabled")
 
         mode = self._mode.get()
+        lang = self._lang.get()
         if mode == "rag":
             self._status_var.set("🔍 RAG: Đang tìm kiếm chunk liên quan...")
         else:
@@ -213,9 +243,9 @@ class RAGChatbotUI:
         def _worker():
             try:
                 if mode == "rag":
-                    answer = ask_rag(question)
+                    answer = ask_rag(question, lang=lang)
                 else:
-                    answer = ask_full_doc(question)
+                    answer = ask_full_doc(question, lang=lang)
                 self.root.after(0, lambda: self._on_answer(answer))
             except Exception as e:
                 err = str(e)
