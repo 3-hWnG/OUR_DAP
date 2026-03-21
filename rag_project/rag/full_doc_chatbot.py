@@ -33,7 +33,7 @@ def load_full_doc(pdf_path: str):
     print(f"✅ Đã load {len(_full_text)} ký tự vào context")
 
 
-def ask_full_doc(question: str) -> str:
+def ask_full_doc(question: str, lang: str = "vi") -> str:
     """
     Full Document QA pipeline:
       1. Nhét toàn bộ text PDF vào prompt
@@ -43,10 +43,12 @@ def ask_full_doc(question: str) -> str:
     if not _full_text:
         raise RuntimeError("Chưa load PDF! Gọi load_full_doc() trước.")
 
+    lang_instruction = "Trả lời bằng tiếng Việt, rõ ràng và ngắn gọn." if lang == "vi" else "Answer in English, clearly and concisely."
+
     prompt = f"""Bạn là trợ lý AI hỗ trợ hỏi đáp về hệ thống nhận diện biển số xe.
 Dưới đây là toàn bộ nội dung tài liệu của nhóm. Hãy đọc kỹ và trả lời câu hỏi dựa trên tài liệu.
 Nếu tài liệu không có thông tin liên quan, hãy nói rõ điều đó.
-Trả lời bằng tiếng Việt, rõ ràng và ngắn gọn.
+{lang_instruction}
 
 === NỘI DUNG TÀI LIỆU ===
 {_full_text}
