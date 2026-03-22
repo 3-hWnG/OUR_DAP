@@ -6,7 +6,7 @@ from paddleocr import PaddleOCR
 
 class PlateOCR:
     def __init__(self, use_gpu: bool = False):
-        print("Đang tải PaddleOCR (CRNN - Chuyên trị chữ méo)...")
+        print("Đang tải PaddleOCR...")
         self.ocr = PaddleOCR(
             use_angle_cls=True,
             lang='en',
@@ -71,13 +71,15 @@ class PlateOCR:
 
     def _correct_chars(self, text: str) -> str:
         """
-        Chỉ ép các vị trí chắc chắn là SỐ:
+        Ép ký tự theo vị trí:
           - Vị trí 0, 1 : mã tỉnh → luôn là SỐ
+          - Vị trí 2    : series → luôn là CHỮ (ưu tiên biển xe máy)
+          - Vị trí 3    : KHÔNG ép (có thể là SỐ hoặc CHỮ thứ 2 như LD, KT...)
           - Vị trí 4+   : số thứ tự → luôn là SỐ
-          - Vị trí 2, 3 : KHÔNG ép (có thể là CHỮ+SỐ hoặc 2 CHỮ như LD, KT...)
         """
         char_to_num = {'B': '8', 'D': '0', 'S': '5', 'G': '6', 'Z': '2', 'A': '4',
                        'I': '1', 'O': '0', 'Q': '0'}
+        num_to_char = {'8': 'B', '0': 'D', '5': 'S', '6': 'G', '2': 'Z', '4': 'A'}
 
         chars = list(text)
         length = len(chars)
@@ -85,10 +87,16 @@ class PlateOCR:
         if length < 4:
             return text
 
+        # Vị trí 0, 1: mã tỉnh → SỐ
         for i in [0, 1]:
             if chars[i] in char_to_num:
                 chars[i] = char_to_num[chars[i]]
 
+        # Vị trí 2: series → CHỮ
+        if chars[2] in num_to_char:
+            chars[2] = num_to_char[chars[2]]
+
+        # Vị trí 4 trở đi: số thứ tự → SỐ
         for i in range(4, length):
             if chars[i] in char_to_num:
                 chars[i] = char_to_num[chars[i]]
